@@ -17,17 +17,21 @@ const saleSchema = new mongoose.Schema(
   {
     invoiceNo: { type: String, required: true, unique: true },
     invoiceDate: { type: String, required: true },
-    saleType: { type: String, default: "sale", enum: ["sale", "return"] },
+    saleType: {
+      type: String,
+      default: "sale",
+      enum: ["sale", "return", "purchase"],
+    },
     saleSource: {
       type: String,
       default: "cash",
-      enum: ["debit", "credit", "cash"],
-    }, // debit=DebitSalePage, credit=CreditSalePage, cash=Counter
+      enum: ["debit", "credit", "cash", "raw-sale", "raw-purchase"],
+    },
     saleSource: {
       type: String,
       default: "cash",
       enum: ["cash", "credit", "debit"],
-    }, // cash=counter, credit=credit sale, debit=debit/purchase
+    },
     paymentMode: {
       type: String,
       default: "Cash",
