@@ -11,6 +11,7 @@ import journalRoutes from "./routes/journalRoutes.js";
 import holdBillRoutes from "./routes/holdBillsRoutes.js";
 import quotationRoutes from "./routes/quotationRoutes.js";
 import damageRoutes from "./routes/damageRoutes.js";
+import cashPaymentRoutes from "./routes/cashPaymentRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -30,6 +31,7 @@ app.use("/api/journal", journalRoutes);
 app.use("/api/hold-bills", holdBillRoutes);
 app.use("/api/quotations", quotationRoutes);
 app.use("/api/damage", damageRoutes);
+app.use("/api/cpv", cashPaymentRoutes);
 app.get("/", (req, res) => {
   res.json({ message: "Shop Management API is running" });
 });
