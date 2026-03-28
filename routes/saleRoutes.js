@@ -5,6 +5,7 @@ import {
   getSaleSummary,
   createSale,
   updateSale,
+  createSaleReturn,
   deleteSale,
   getNextInvoice,
 } from "../controllers/saleController.js";
@@ -16,6 +17,7 @@ router.get("/summary", getSaleSummary);
 router.get("/", getAllSales);
 router.get("/:id", getSaleById);
 router.post("/", createSale);
+router.post("/return", createSaleReturn);
 router.put("/:id", updateSale);
 router.delete("/:id", deleteSale);
 

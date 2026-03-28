@@ -189,3 +189,37 @@ export const deleteSale = async (req, res) => {
     res.status(500).json({ success: false, message: e.message });
   }
 };
+// ── POST create sale return ───────────────────────────────────────────────
+export const createSaleReturn = async (req, res) => {
+  try {
+    const last = await Sale.findOne(
+      { saleType: "return" },
+      {},
+      { sort: { createdAt: -1 } },
+    );
+    let num = 1;
+    if (last?.invoiceNo) {
+      const n = parseInt(last.invoiceNo.replace("RTN-", ""));
+      if (!isNaN(n)) num = n + 1;
+    }
+    const returnNo = `RTN-${String(num).padStart(5, "0")}`;
+
+    const sale = await Sale.create({
+      ...req.body,
+      invoiceNo: returnNo,
+      returnNo,
+      invoiceDate: req.body.returnDate, // ← yeh add karo
+      saleType: "return",
+    });
+
+    if (sale.customerId && sale.paidAmount > 0) {
+      await Customer.findByIdAndUpdate(sale.customerId, {
+        $inc: { currentBalance: -sale.paidAmount },
+      });
+    }
+
+    res.status(201).json({ success: true, data: sale });
+  } catch (e) {
+    res.status(400).json({ success: false, message: e.message });
+  }
+};
