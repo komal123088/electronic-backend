@@ -122,15 +122,27 @@ export const getSaleById = async (req, res) => {
   }
 };
 
+// ── HELPER: next INV number (sirf actual sales, returns exclude) ──────────
+const getNextInvNum = async () => {
+  // ✅ FIX: saleType: "sale" filter — Returns (RTN-) exclude ho jayenge
+  const last = await Sale.findOne(
+    { saleType: "sale" },
+    { invoiceNo: 1 },
+    { sort: { createdAt: -1 } },
+  ).lean();
+
+  let num = 1;
+  if (last?.invoiceNo) {
+    const n = parseInt(last.invoiceNo.replace("INV-", ""), 10);
+    if (!isNaN(n) && n > 0) num = n + 1;
+  }
+  return num;
+};
+
 // ── GET next invoice number ───────────────────────────────────────────────
 export const getNextInvoice = async (req, res) => {
   try {
-    const last = await Sale.findOne({}, {}, { sort: { createdAt: -1 } });
-    let num = 1;
-    if (last?.invoiceNo) {
-      const n = parseInt(last.invoiceNo.replace("INV-", ""));
-      if (!isNaN(n)) num = n + 1;
-    }
+    const num = await getNextInvNum();
     res.json({
       success: true,
       data: { invoiceNo: `INV-${String(num).padStart(5, "0")}` },
@@ -143,13 +155,10 @@ export const getNextInvoice = async (req, res) => {
 // ── POST create sale ──────────────────────────────────────────────────────
 export const createSale = async (req, res) => {
   try {
-    const last = await Sale.findOne({}, {}, { sort: { createdAt: -1 } });
-    let num = 1;
-    if (last?.invoiceNo) {
-      const n = parseInt(last.invoiceNo.replace("INV-", ""));
-      if (!isNaN(n)) num = n + 1;
-    }
+    // ✅ FIX: same helper use karo — returns exclude honge
+    const num = await getNextInvNum();
     const invoiceNo = `INV-${String(num).padStart(5, "0")}`;
+
     const sale = await Sale.create({ ...req.body, invoiceNo });
 
     if (sale.customerId && sale.balance > 0) {
@@ -189,18 +198,21 @@ export const deleteSale = async (req, res) => {
     res.status(500).json({ success: false, message: e.message });
   }
 };
+
 // ── POST create sale return ───────────────────────────────────────────────
 export const createSaleReturn = async (req, res) => {
   try {
+    // Return number — sirf returns mein se last dhundo (sahi tha pehle se)
     const last = await Sale.findOne(
       { saleType: "return" },
-      {},
+      { invoiceNo: 1 },
       { sort: { createdAt: -1 } },
-    );
+    ).lean();
+
     let num = 1;
     if (last?.invoiceNo) {
-      const n = parseInt(last.invoiceNo.replace("RTN-", ""));
-      if (!isNaN(n)) num = n + 1;
+      const n = parseInt(last.invoiceNo.replace("RTN-", ""), 10);
+      if (!isNaN(n) && n > 0) num = n + 1;
     }
     const returnNo = `RTN-${String(num).padStart(5, "0")}`;
 
@@ -208,7 +220,7 @@ export const createSaleReturn = async (req, res) => {
       ...req.body,
       invoiceNo: returnNo,
       returnNo,
-      invoiceDate: req.body.returnDate, // ← yeh add karo
+      invoiceDate: req.body.returnDate,
       saleType: "return",
     });
 
