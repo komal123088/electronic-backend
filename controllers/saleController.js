@@ -122,9 +122,8 @@ export const getSaleById = async (req, res) => {
   }
 };
 
-// ── HELPER: next INV number (sirf actual sales, returns exclude) ──────────
+// ── HELPER: next INV number ( actual sales, returns exclude) ──────────
 const getNextInvNum = async () => {
-  // ✅ FIX: saleType: "sale" filter — Returns (RTN-) exclude ho jayenge
   const last = await Sale.findOne(
     { saleType: "sale" },
     { invoiceNo: 1 },
