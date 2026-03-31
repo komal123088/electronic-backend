@@ -51,10 +51,10 @@ customerSchema.pre("save", async function () {
       .findOne({}, {}, { sort: { createdAt: -1 } });
     let num = 1;
     if (last?.code) {
-      const n = parseInt(last.code.replace("C-", ""));
+      const n = parseInt(last.code);
       if (!isNaN(n)) num = n + 1;
     }
-    this.code = `C-${String(num).padStart(4, "0")}`;
+    this.code = String(num);
   }
 });
 
