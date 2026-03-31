@@ -17,6 +17,9 @@ export const getAllSales = async (req, res) => {
     } = req.query;
 
     const filter = {};
+    if (req.query.invoiceNo) {
+      filter.invoiceNo = req.query.invoiceNo;
+    }
     if (customerId) filter.customerId = customerId;
     if (saleType) filter.saleType = saleType;
     if (saleSource) filter.saleSource = saleSource;
@@ -122,7 +125,7 @@ export const getSaleById = async (req, res) => {
   }
 };
 
-// ── HELPER: next INV number ( actual sales, returns exclude) ──────────
+// ── HELPER: next INV number
 const getNextInvNum = async () => {
   const last = await Sale.findOne(
     { saleType: "sale" },
@@ -135,6 +138,14 @@ const getNextInvNum = async () => {
     const n = parseInt(last.invoiceNo.replace("INV-", ""), 10);
     if (!isNaN(n) && n > 0) num = n + 1;
   }
+
+  // ✅ Loop karo jab tak unique number na mile
+  while (
+    await Sale.exists({ invoiceNo: `INV-${String(num).padStart(5, "0")}` })
+  ) {
+    num++;
+  }
+
   return num;
 };
 
@@ -174,18 +185,35 @@ export const createSale = async (req, res) => {
 // ── PUT update sale ───────────────────────────────────────────────────────
 export const updateSale = async (req, res) => {
   try {
-    const sale = await Sale.findByIdAndUpdate(req.params.id, req.body, {
+    const oldSale = await Sale.findById(req.params.id);
+    if (!oldSale)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    // ✅ invoiceNo ko body se nikaal do — kabhi update nahi hogi
+    const { invoiceNo, returnNo, saleType, ...updateData } = req.body;
+
+    if (oldSale.customerId) {
+      await Customer.findByIdAndUpdate(oldSale.customerId, {
+        $inc: { currentBalance: -(oldSale.balance || 0) },
+      });
+    }
+
+    const sale = await Sale.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
-    if (!sale)
-      return res.status(404).json({ success: false, message: "Not found" });
+
+    if (sale.customerId) {
+      await Customer.findByIdAndUpdate(sale.customerId, {
+        $inc: { currentBalance: sale.balance || 0 },
+      });
+    }
+
     res.json({ success: true, data: sale });
   } catch (e) {
     res.status(400).json({ success: false, message: e.message });
   }
 };
-
 // ── DELETE sale ───────────────────────────────────────────────────────────
 export const deleteSale = async (req, res) => {
   try {
