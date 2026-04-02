@@ -22,15 +22,11 @@ const saleSchema = new mongoose.Schema(
       default: "sale",
       enum: ["sale", "return", "purchase"],
     },
+
     saleSource: {
       type: String,
       default: "cash",
-      enum: ["debit", "credit", "cash", "raw-sale", "raw-purchase"],
-    },
-    saleSource: {
-      type: String,
-      default: "cash",
-      enum: ["cash", "credit", "debit"],
+      enum: ["cash", "credit", "debit", "raw-sale", "raw-purchase"],
     },
     paymentMode: {
       type: String,
@@ -38,7 +34,6 @@ const saleSchema = new mongoose.Schema(
       enum: ["Cash", "Credit", "Bank", "Cheque", "Partial"],
     },
 
-    // Customer
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
@@ -47,12 +42,10 @@ const saleSchema = new mongoose.Schema(
     customerName: { type: String, default: "COUNTER SALE" },
     customerPhone: { type: String, default: "" },
 
-    // Items
     items: [saleItemSchema],
 
-    // Amounts
     subTotal: { type: Number, default: 0 },
-    extraDisc: { type: Number, default: 0 }, // extra discount amount
+    extraDisc: { type: Number, default: 0 },
     discAmount: { type: Number, default: 0 },
     netTotal: { type: Number, default: 0 },
     prevBalance: { type: Number, default: 0 },

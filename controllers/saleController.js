@@ -165,17 +165,25 @@ export const getNextInvoice = async (req, res) => {
 // ── POST create sale ──────────────────────────────────────────────────────
 export const createSale = async (req, res) => {
   try {
-    // ✅ FIX: same helper use karo — returns exclude honge
     const num = await getNextInvNum();
     const invoiceNo = `INV-${String(num).padStart(5, "0")}`;
 
-    const sale = await Sale.create({ ...req.body, invoiceNo });
+    const body = {
+      ...req.body,
+      invoiceNo,
+      customerName: req.body.customerName?.trim() || "COUNTER SALE",
+      customerPhone: req.body.customerPhone?.trim() || "",
 
+      customerId: req.body.customerId || undefined,
+    };
+
+    const sale = await Sale.create(body);
     if (sale.customerId && sale.balance > 0) {
       await Customer.findByIdAndUpdate(sale.customerId, {
         $inc: { currentBalance: sale.balance },
       });
     }
+
     res.status(201).json({ success: true, data: sale });
   } catch (e) {
     res.status(400).json({ success: false, message: e.message });
