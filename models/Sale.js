@@ -26,7 +26,7 @@ const saleSchema = new mongoose.Schema(
     saleSource: {
       type: String,
       default: "cash",
-      enum: ["cash", "credit", "debit", "raw-sale", "raw-purchase"],
+      enum: ["cash", "credit", "debit", "raw-sale", "raw-purchase", "purchase"],
     },
     paymentMode: {
       type: String,

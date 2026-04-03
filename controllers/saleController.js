@@ -166,14 +166,14 @@ export const getNextInvoice = async (req, res) => {
 export const createSale = async (req, res) => {
   try {
     const num = await getNextInvNum();
-    const invoiceNo = `INV-${String(num).padStart(5, "0")}`;
+    const prefix = req.body.invoicePrefix || "INV";
+    const invoiceNo = `${prefix}-${String(num).padStart(5, "0")}`;
 
     const body = {
       ...req.body,
       invoiceNo,
       customerName: req.body.customerName?.trim() || "COUNTER SALE",
       customerPhone: req.body.customerPhone?.trim() || "",
-
       customerId: req.body.customerId || undefined,
     };
 
