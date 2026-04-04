@@ -161,6 +161,69 @@ export const getNextInvoice = async (req, res) => {
     res.status(500).json({ success: false, message: e.message });
   }
 };
+// ── HELPER: next PUR number
+const getNextPurNum = async () => {
+  const last = await Sale.findOne(
+    { saleType: "purchase" },
+    { invoiceNo: 1 },
+    { sort: { createdAt: -1 } },
+  ).lean();
+
+  let num = 1;
+  if (last?.invoiceNo) {
+    const n = parseInt(last.invoiceNo.replace("PUR-", ""), 10);
+    if (!isNaN(n) && n > 0) num = n + 1;
+  }
+
+  while (
+    await Sale.exists({ invoiceNo: `PUR-${String(num).padStart(5, "0")}` })
+  ) {
+    num++;
+  }
+
+  return num;
+};
+
+// ── GET next purchase invoice number
+export const getNextPurchaseInvoice = async (req, res) => {
+  try {
+    const num = await getNextPurNum();
+    res.json({
+      success: true,
+      data: { invoiceNo: `PUR-${String(num).padStart(5, "0")}` },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+// ── CREATE PURCHASE
+export const createPurchase = async (req, res) => {
+  try {
+    const num = await getNextPurNum();
+    const invoiceNo = `PUR-${String(num).padStart(5, "0")}`;
+
+    const body = {
+      ...req.body,
+      invoiceNo,
+      customerName: req.body.customerName?.trim() || "COUNTER SALE",
+      customerPhone: req.body.customerPhone?.trim() || "",
+      customerId: req.body.customerId || undefined,
+      saleType: "purchase",
+    };
+
+    const sale = await Sale.create(body);
+    if (sale.customerId && sale.balance > 0) {
+      await Customer.findByIdAndUpdate(sale.customerId, {
+        $inc: { currentBalance: sale.balance },
+      });
+    }
+
+    res.status(201).json({ success: true, data: sale });
+  } catch (e) {
+    res.status(400).json({ success: false, message: e.message });
+  }
+};
 
 // ── POST create sale ──────────────────────────────────────────────────────
 export const createSale = async (req, res) => {
@@ -197,7 +260,6 @@ export const updateSale = async (req, res) => {
     if (!oldSale)
       return res.status(404).json({ success: false, message: "Not found" });
 
-    // ✅ invoiceNo ko body se nikaal do — kabhi update nahi hogi
     const { invoiceNo, returnNo, saleType, ...updateData } = req.body;
 
     if (oldSale.customerId) {
@@ -262,6 +324,130 @@ export const createSaleReturn = async (req, res) => {
     if (sale.customerId && sale.paidAmount > 0) {
       await Customer.findByIdAndUpdate(sale.customerId, {
         $inc: { currentBalance: -sale.paidAmount },
+      });
+    }
+
+    res.status(201).json({ success: true, data: sale });
+  } catch (e) {
+    res.status(400).json({ success: false, message: e.message });
+  }
+};
+
+// ── HELPER: next RAW-P number
+const getNextRawPurNum = async () => {
+  const last = await Sale.findOne(
+    { saleType: "raw-purchase" },
+    { invoiceNo: 1 },
+    { sort: { createdAt: -1 } },
+  ).lean();
+
+  let num = 1;
+  if (last?.invoiceNo) {
+    const n = parseInt(last.invoiceNo.replace("RAW-P-", ""), 10);
+    if (!isNaN(n) && n > 0) num = n + 1;
+  }
+
+  while (
+    await Sale.exists({ invoiceNo: `RAW-P-${String(num).padStart(5, "0")}` })
+  ) {
+    num++;
+  }
+  return num;
+};
+
+// ── GET next raw purchase invoice
+export const getNextRawPurchaseInvoice = async (req, res) => {
+  try {
+    const num = await getNextRawPurNum();
+    res.json({
+      success: true,
+      data: { invoiceNo: `RAW-P-${String(num).padStart(5, "0")}` },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+// ── CREATE RAW PURCHASE
+export const createRawPurchase = async (req, res) => {
+  try {
+    const num = await getNextRawPurNum();
+    const invoiceNo = `RAW-P-${String(num).padStart(5, "0")}`;
+
+    const body = {
+      ...req.body,
+      invoiceNo,
+      customerName: req.body.customerName?.trim() || "COUNTER SALE",
+      customerPhone: req.body.customerPhone?.trim() || "",
+      customerId: req.body.customerId || undefined,
+      saleType: "raw-purchase",
+    };
+
+    const sale = await Sale.create(body);
+    if (sale.customerId && sale.balance > 0) {
+      await Customer.findByIdAndUpdate(sale.customerId, {
+        $inc: { currentBalance: sale.balance },
+      });
+    }
+
+    res.status(201).json({ success: true, data: sale });
+  } catch (e) {
+    res.status(400).json({ success: false, message: e.message });
+  }
+};
+
+// ── HELPER: next RAW-S number
+const getNextRawSaleNum = async () => {
+  const last = await Sale.findOne(
+    { saleType: "raw-sale" },
+    { invoiceNo: 1 },
+    { sort: { createdAt: -1 } },
+  ).lean();
+
+  let num = 1;
+  if (last?.invoiceNo) {
+    const n = parseInt(last.invoiceNo.replace("RAW-S-", ""), 10);
+    if (!isNaN(n) && n > 0) num = n + 1;
+  }
+
+  while (
+    await Sale.exists({ invoiceNo: `RAW-S-${String(num).padStart(5, "0")}` })
+  ) {
+    num++;
+  }
+  return num;
+};
+
+export const getNextRawSaleInvoice = async (req, res) => {
+  try {
+    const num = await getNextRawSaleNum();
+    res.json({
+      success: true,
+      data: { invoiceNo: `RAW-S-${String(num).padStart(5, "0")}` },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+export const createRawSale = async (req, res) => {
+  try {
+    const num = await getNextRawSaleNum();
+    const invoiceNo = `RAW-S-${String(num).padStart(5, "0")}`;
+
+    const body = {
+      ...req.body,
+      invoiceNo,
+      customerName: req.body.customerName?.trim() || "COUNTER SALE",
+      customerPhone: req.body.customerPhone?.trim() || "",
+      customerId: req.body.customerId || undefined,
+      saleType: "raw-sale",
+    };
+
+    const sale = await Sale.create(body);
+    if (sale.customerId && sale.balance > 0) {
+      await Customer.findByIdAndUpdate(sale.customerId, {
+        $inc: { currentBalance: sale.balance },
       });
     }
 

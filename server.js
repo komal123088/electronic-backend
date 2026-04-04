@@ -12,6 +12,9 @@ import holdBillRoutes from "./routes/holdBillsRoutes.js";
 import quotationRoutes from "./routes/quotationRoutes.js";
 import damageRoutes from "./routes/damageRoutes.js";
 import cashPaymentRoutes from "./routes/cashPaymentRoutes.js";
+import purchaseRoutes from "./routes/purchaseRoutes.js";
+import rawPurchaseRoutes from "./routes/rawPurchaseRoutes.js";
+import rawSaleRoutes from "./routes/rawSaleRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -25,6 +28,9 @@ app.use(express.json());
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/products", productRoutes);
 app.use("/api/sales", saleRoutes);
+app.use("/api/purchases", purchaseRoutes);
+app.use("/api/raw-purchases", rawPurchaseRoutes);
+app.use("/api/raw-sales", rawSaleRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/journal", journalRoutes);
