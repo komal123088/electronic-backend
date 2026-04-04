@@ -20,7 +20,7 @@ const saleSchema = new mongoose.Schema(
     saleType: {
       type: String,
       default: "sale",
-      enum: ["sale", "return", "purchase"],
+      enum: ["sale", "return", "purchase", "raw-sale", "raw-purchase"],
     },
 
     saleSource: {
