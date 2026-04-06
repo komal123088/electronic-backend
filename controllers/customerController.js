@@ -30,7 +30,7 @@ export const getAll = async (req, res) => {
   }
 };
 
-// ── GET ONE ───────────────────────────────────────────────────────────────────
+// ── GET ONE ───── ──────────────────────────────────────
 export const getOne = async (req, res) => {
   try {
     const customer = await Customer.findById(req.params.id);
